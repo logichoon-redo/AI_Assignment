@@ -23,8 +23,8 @@ public class ActivationFunction {
 public class NeuralNetConstants {
   
   public static let learningRate: Float = 0.3
-  public static let momentum: Float = 0.6
-  public static let iterations: Int = 100000
+  public static let momentum: Float = 0.03
+  public static let iterations: Int = 10000
   
 }
 
@@ -32,7 +32,7 @@ public class Layer {
   
   private var output: [Float]
   private var input: [Float]
-  private var weights: [Float]
+  var weights: [Float]
   private var dWeights: [Float]
   
   init(inputSize: Int, outputSize: Int) {
@@ -66,6 +66,7 @@ public class Layer {
     return output
   }
   
+  // BackPropagation
   public func train(error: [Float], learningRate: Float, momentum: Float) -> [Float] {
     
     var offset = 0
@@ -94,7 +95,7 @@ public class Layer {
 
 public class BackpropNeuralNetwork {
   
-  private var layers: [Layer] = []
+  var layers: [Layer] = []
   
   public init(inputSize: Int, hiddenSize: Int, outputSize: Int) {
     self.layers.append(Layer(inputSize: inputSize, outputSize: hiddenSize))
@@ -116,10 +117,6 @@ public class BackpropNeuralNetwork {
     var error = [Float](repeating: 0, count: calculatedOutput.count)
     
     for i in 0..<error.count {
-//      print(error.count)
-//      print("targetCount: \(targetOutput.count)")
-//      print("calculateCount: \(calculatedOutput.count)")
-
       error[i] = targetOutput[i] - calculatedOutput[i]
     }
     
@@ -191,6 +188,7 @@ var traningData: [[Float]] = [
   [6.3,    2.5,    4.9,    1.5],
   [6.1,    2.8,    4.7,    1.2],
   [6.4,    2.9,    4.3,    1.3],
+  // 여기서 부터 class 3
   [5.1,    3.5,    1.4,    0.2],
   [4.9,    3.0,    1.4,    0.2],
   [4.7,    3.2,    1.3,    0.2],
@@ -232,19 +230,25 @@ for i in 1...75 {
   }
 }
 
-let backProb = BackpropNeuralNetwork(inputSize: 4, hiddenSize: 3, outputSize: 3)
+let backProp = BackpropNeuralNetwork(inputSize: 4, hiddenSize: 3, outputSize: 3)
 
 for _ in 0..<NeuralNetConstants.iterations {
   
   for i in 0..<traningResults.count {
 //    print(traningData[i])
 //    print("targetData: \(traningResults[i])")
-    backProb.train(input: traningData[i], targetOutput: traningResults[i], learningRate: NeuralNetConstants.learningRate, momentum: NeuralNetConstants.momentum)
+    backProp.train(input: traningData[i], targetOutput: traningResults[i], learningRate: NeuralNetConstants.learningRate, momentum: NeuralNetConstants.momentum)
   }
   
   for i in 0..<traningResults.count {
     let t = traningData[i]
-    print("\(t[0]), \(t[1]), \(t[2]), \(t[3])  -- \(backProb.run(input: t)[0]), \(backProb.run(input: t)[1]), \(backProb.run(input: t)[2])")
+    print("\(t[0]), \(t[1]), \(t[2]), \(t[3])  -- \(backProp.run(input: t)[0]), \(backProp.run(input: t)[1]), \(backProp.run(input: t)[2])")
   }
   
 }
+
+_=backProp.layers.map {
+  // 연결강도
+  print($0.weights)
+}
+
