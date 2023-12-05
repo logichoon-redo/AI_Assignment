@@ -10,11 +10,13 @@ import Foundation
 public class ActivationFunction {
   
   // sigmoid ActivationFunction :: differential == true, sigmoid 미분값을 return함
-  class func sigmoid(x: Float, differential: Bool = false) -> Float {
+  class func sigmoid(v: Float, differential: Bool = false) -> Float {
+//    let x = 1.0 / (1.0 + exp(-v))
+    
     if differential == true {
-      return x*(1-x)
+      return v * (1.0 - v)
     } else {
-      return 1 / (1 + exp(-x))
+      return 1.0 / (1.0 + exp(-v))
     }
   }
   
@@ -39,7 +41,7 @@ public class Layer {
     self.output = [Float](repeating: 0, count: outputSize)
     self.input = [Float](repeating: 0, count: inputSize + 1)
     self.weights = (0..<(1 + inputSize) * outputSize).map { _ in
-      return (-2.0...2.0).random()
+      return (-0.5...0.5).random()
     }
     self.dWeights = [Float](repeating: 0, count: weights.count)
   }
@@ -59,7 +61,7 @@ public class Layer {
         output[i] += weights[offSet+j] * input[j]
       }
       
-      output[i] = ActivationFunction.sigmoid(x: output[i])
+      output[i] = ActivationFunction.sigmoid(v: output[i])
       offSet += input.count
     }
     
@@ -74,7 +76,7 @@ public class Layer {
     
     for i in 0..<output.count {
       
-      let delta = error[i] * ActivationFunction.sigmoid(x: output[i], differential: true)
+      let delta = error[i] * ActivationFunction.sigmoid(v: output[i], differential: true)
       
       for j in 0..<input.count {
         let weightIndex = offset + j
@@ -232,17 +234,16 @@ for i in 1...75 {
 
 let backProp = BackpropNeuralNetwork(inputSize: 4, hiddenSize: 3, outputSize: 3)
 
-for _ in 0..<NeuralNetConstants.iterations {
+for j in 0..<NeuralNetConstants.iterations {
   
   for i in 0..<traningResults.count {
-//    print(traningData[i])
-//    print("targetData: \(traningResults[i])")
     backProp.train(input: traningData[i], targetOutput: traningResults[i], learningRate: NeuralNetConstants.learningRate, momentum: NeuralNetConstants.momentum)
   }
   
   for i in 0..<traningResults.count {
     let t = traningData[i]
-    print("\(t[0]), \(t[1]), \(t[2]), \(t[3])  -- \(backProp.run(input: t)[0]), \(backProp.run(input: t)[1]), \(backProp.run(input: t)[2])")
+    let result = backProp.run(input: t)
+    print("(\(j)) \(t[0]), \(t[1]), \(t[2]), \(t[3])  --  \(result[0]), \(result[1]), \(result[2])")
   }
   
 }
