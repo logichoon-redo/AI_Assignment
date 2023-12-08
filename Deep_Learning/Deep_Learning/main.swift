@@ -1,8 +1,8 @@
 //
 //  main.swift
-//  AI_Assignment
+//  Deep_Learning
 //
-//  Created by 이치훈 on 11/24/23.
+//  Created by 이치훈 on 12/8/23.
 //
 
 import Foundation
@@ -16,6 +16,15 @@ public class ActivationFunction {
       return x * (1.0 - x)
     } else {
       return 1.0 / (1.0 + exp(-x))
+    }
+  }
+  
+  // ReLU 활성화 함수
+  class func ReLU(x: Double, differential: Bool = false) -> Double {
+    if differential == true {
+      return x > 0.0 ? 1.0 : 0.0
+    } else {
+      return max(0.0, x)
     }
   }
   
@@ -60,7 +69,7 @@ public class Layer {
         output[i] += weights[offSet+j] * input[j]
       }
       
-      output[i] = ActivationFunction.sigmoid(x: output[i])
+      output[i] = ActivationFunction.ReLU(x: output[i])
       offSet += input.count
     }
     
@@ -75,7 +84,7 @@ public class Layer {
     
     for i in 0..<output.count {
       
-      let delta = error[i] * ActivationFunction.sigmoid(x: output[i], differential: true)
+      let delta = error[i] * ActivationFunction.ReLU(x: output[i], differential: true)
       
       for j in 0..<input.count {
         let weightIndex = offset + j
@@ -98,9 +107,10 @@ public class NeuralNetwork {
   
   private var layers: [Layer] = []
   
-  public init(inputSize: Int, hiddenSize: Int, outputSize: Int) {
-    self.layers.append(Layer(inputSize: inputSize, outputSize: hiddenSize))
-    self.layers.append(Layer(inputSize: hiddenSize, outputSize: outputSize))
+  public init(inputSize: Int, hiddenSize1: Int, hiddenSize2: Int, outputSize: Int) {
+    self.layers.append(Layer(inputSize: inputSize, outputSize: hiddenSize1))
+    self.layers.append(Layer(inputSize: hiddenSize1, outputSize: hiddenSize2))
+    self.layers.append(Layer(inputSize: hiddenSize2, outputSize: outputSize))
   }
   
   public func forwardPasing(input: [Double]) -> [Double] {
@@ -225,7 +235,7 @@ for i in 1...75 {
   }
 }
 
-let backProp = NeuralNetwork(inputSize: 4, hiddenSize: 3, outputSize: 3)
+let backProp = NeuralNetwork(inputSize: 4, hiddenSize1: 3, hiddenSize2: 3, outputSize: 3)
 
 for i in 0..<NeuralNetConstants.iterations {
   
@@ -327,3 +337,5 @@ for i in 0..<testingData.count {
   let result = backProp.forwardPasing(input: testingData[i])
   print("(test: \(i+1)) \(t[0]), \(t[1]), \(t[2]), \(t[3])  --  \(result[0]), \(result[1]), \(result[2])")
 }
+
+
