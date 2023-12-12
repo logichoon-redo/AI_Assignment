@@ -25,7 +25,7 @@ public class NeuralNetConstants {
   
   public static let learningRate: Double = 0.03
   public static let momentum: Double = 0.6
-  public static let iterations: Int = 50000
+  public static let iterations: Int = 100000
   
 }
 
@@ -69,7 +69,6 @@ public class Layer {
   
   // MARK: BackPropagation
   public func deltaRule(error: [Double], learningRate: Double, momentum: Double) -> [Double] {
-    
     var offset = 0
     var nextError = [Double](repeating: 0, count: input.count)
     
@@ -225,17 +224,17 @@ for i in 1...75 {
   }
 }
 
-let backProp = NeuralNetwork(inputSize: 4, hiddenSize: 3, outputSize: 3)
+let neuralN = NeuralNetwork(inputSize: 4, hiddenSize: 3, outputSize: 3)
 
 for i in 0..<NeuralNetConstants.iterations {
   
   for j in 0..<traningTargets.count {
-    backProp.backpropagation(input: traningData[j], targetOutput: traningTargets[j], learningRate: NeuralNetConstants.learningRate, momentum: NeuralNetConstants.momentum)
+    neuralN.backpropagation(input: traningData[j], targetOutput: traningTargets[j], learningRate: NeuralNetConstants.learningRate, momentum: NeuralNetConstants.momentum)
   }
   
   for j in 0..<traningTargets.count {
     let t = traningData[j]
-    let result = backProp.forwardPasing(input: t)
+    let result = neuralN.forwardPasing(input: t)
     print("(traning: \(i+1)) \(t[0]), \(t[1]), \(t[2]), \(t[3])  --  \(result[0]), \(result[1]), \(result[2])")
   }
   
@@ -324,6 +323,6 @@ var testingData: [[Double]] = [
 
 for i in 0..<testingData.count {
   let t = testingData[i]
-  let result = backProp.forwardPasing(input: testingData[i])
+  let result = neuralN.forwardPasing(input: testingData[i])
   print("(test: \(i+1)) \(t[0]), \(t[1]), \(t[2]), \(t[3])  --  \(result[0]), \(result[1]), \(result[2])")
 }

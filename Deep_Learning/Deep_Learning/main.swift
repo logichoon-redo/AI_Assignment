@@ -9,49 +9,72 @@ import Foundation
 
 public class ActivationFunction {
   
-  // sigmoid ActivationFunction :: differential == true, sigmoid 미분값을 return함
-  class func sigmoid(x: Double, differential: Bool = false) -> Double {
+  // Leaky ReLU 활성화 함수
+  class func leakyReLU(x: Double, differential: Bool = false) -> Double {
+//    print("leakyReLU input: \(x)")
     if differential == true {
-      // O1 * {1 - O1}
-      return x * (1.0 - x)
+      // Differential
+//      print("leakyReLU output: \(x > 0.0 ? 1.0 : 0.01)")
+      return x > 0.0 ? 1.0 : 0.01
     } else {
-      return 1.0 / (1.0 + exp(-x))
+      // Original
+//      print("leakyReLU output: \(x > 0.0 ? x : 0.01 * x)")
+      return x > 0.0 ? x : 0.01 * x
     }
   }
   
-  // ReLU 활성화 함수
   class func ReLU(x: Double, differential: Bool = false) -> Double {
+    // print("inpiut: \(x)")
     if differential == true {
+      // Differential
+      // print("output: \(x > 0.0 ? 1.0 : 0.0)")
       return x > 0.0 ? 1.0 : 0.0
     } else {
+      // Original
+      // print("output: \(max(0.0, x))")
       return max(0.0, x)
     }
+  }
+  
+  // SoftMax
+  class func softMax(nets: [Double]) -> [Double] {
+    let maxNet = nets.max() ?? 0
+//    print("softMax input: \(nets)")
+    let expValues = nets.map { exp($0 - maxNet) }
+    let sumExpValues = expValues.reduce(0, +)
+//    print("softMax output: \(expValues.map { $0 / sumExpValues })")
+    
+    return expValues.map { $0 / sumExpValues }
   }
   
 }
 
 public class NeuralNetConstants {
   
-  public static let learningRate: Double = 0.03
+  public static let learningRate: Double = 0.001
   public static let momentum: Double = 0.6
-  public static let iterations: Int = 50000
+  public static let iterations: Int = 10000
   
 }
 
 public class Layer {
-  
   private var output: [Double]
   private var input: [Double]
   private var weights: [Double]
   private var dWeights: [Double]
+  private var nets: [Double]
+  public var isOutputNode: Bool
   
-  init(inputSize: Int, outputSize: Int) {
+  
+  init(inputSize: Int, outputSize: Int, isOutputNode: Bool = false) {
     self.output = [Double](repeating: 0, count: outputSize)
     self.input = [Double](repeating: 0, count: inputSize + 1)
     self.weights = (0..<(1 + inputSize) * outputSize).map { _ in
       return Double.random(in: -0.5...0.5)
     }
+    self.nets = [Double](repeating: 0, count: outputSize)
     self.dWeights = [Double](repeating: 0, count: weights.count)
+    self.isOutputNode = isOutputNode
   }
   
   // MARK: Forward Passing
@@ -68,8 +91,12 @@ public class Layer {
         //Get NET
         output[i] += weights[offSet+j] * input[j]
       }
+      // Backpropagation을 하면서 ReLU 미분에 넣을 NET값을 스토리지에 저장함
+      nets[i] = output[i]
+      if self.isOutputNode == false {
+        output[i] = ActivationFunction.ReLU(x: output[i])
+      }
       
-      output[i] = ActivationFunction.ReLU(x: output[i])
       offSet += input.count
     }
     
@@ -78,21 +105,28 @@ public class Layer {
   
   // MARK: BackPropagation
   public func deltaRule(error: [Double], learningRate: Double, momentum: Double) -> [Double] {
-    
     var offset = 0
     var nextError = [Double](repeating: 0, count: input.count)
     
     for i in 0..<output.count {
+      var delta: Double
       
-      let delta = error[i] * ActivationFunction.ReLU(x: output[i], differential: true)
-      
+      if self.isOutputNode == false {
+        // Hidden Node:: 순정파 때 구했던 net를 구해야함 두전째 은닉층의 net를 넣어야 됨
+        delta = error[i] * ActivationFunction.ReLU(x: nets[i], differential: true)
+      } else {
+        // Output Node: 이거 먼저 수행, 직접 구한 error
+        delta = error[i]
+      }
+        
       for j in 0..<input.count {
         let weightIndex = offset + j
         nextError[j] = nextError[j] + weights[weightIndex] * delta
         // dw: 연결강도 변화량 (에타(학습률)*델타*input)
         let dw = learningRate * delta * input[j]
-        weights[weightIndex] += dWeights[weightIndex] * momentum + dw
-        dWeights[weightIndex] = dw
+//        weights[weightIndex] += dWeights[weightIndex] * momentum + dw
+//        dWeights[weightIndex] = dw
+        weights[weightIndex] += dw
       }
       
       offset += input.count
@@ -110,7 +144,7 @@ public class NeuralNetwork {
   public init(inputSize: Int, hiddenSize1: Int, hiddenSize2: Int, outputSize: Int) {
     self.layers.append(Layer(inputSize: inputSize, outputSize: hiddenSize1))
     self.layers.append(Layer(inputSize: hiddenSize1, outputSize: hiddenSize2))
-    self.layers.append(Layer(inputSize: hiddenSize2, outputSize: outputSize))
+    self.layers.append(Layer(inputSize: hiddenSize2, outputSize: outputSize, isOutputNode: true))
   }
   
   public func forwardPasing(input: [Double]) -> [Double] {
@@ -119,6 +153,7 @@ public class NeuralNetwork {
     for i in 0..<layers.count {
       activations = layers[i].activation(inputArray: activations)
     }
+    activations = ActivationFunction.softMax(nets: activations)
     
     return activations
   }
@@ -235,7 +270,7 @@ for i in 1...75 {
   }
 }
 
-let backProp = NeuralNetwork(inputSize: 4, hiddenSize1: 3, hiddenSize2: 3, outputSize: 3)
+let backProp = NeuralNetwork(inputSize: 4, hiddenSize1: 4, hiddenSize2: 3, outputSize: 3)
 
 for i in 0..<NeuralNetConstants.iterations {
   
