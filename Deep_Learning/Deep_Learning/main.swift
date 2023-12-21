@@ -10,28 +10,25 @@ import Foundation
 public class ActivationFunction {
   
   // Leaky ReLU 활성화 함수
-  class func leakyReLU(x: Double, differential: Bool = false) -> Double {
-//    print("leakyReLU input: \(x)")
-    if differential == true {
-      // Differential
-//      print("leakyReLU output: \(x > 0.0 ? 1.0 : 0.01)")
-      return x > 0.0 ? 1.0 : 0.01
-    } else {
-      // Original
-//      print("leakyReLU output: \(x > 0.0 ? x : 0.01 * x)")
-      return x > 0.0 ? x : 0.01 * x
-    }
-  }
+//  class func leakyReLU(x: Double, differential: Bool = false) -> Double {
+////    print("leakyReLU input: \(x)")
+//    if differential == true {
+//      // Differential
+////      print("leakyReLU output: \(x > 0.0 ? 1.0 : 0.01)")
+//      return x > 0.0 ? 1.0 : 0.01
+//    } else {
+//      // Original
+////      print("leakyReLU output: \(x > 0.0 ? x : 0.01 * x)")
+//      return x > 0.0 ? x : 0.01 * x
+//    }
+//  }
   
   class func ReLU(x: Double, differential: Bool = false) -> Double {
-    // print("inpiut: \(x)")
     if differential == true {
       // Differential
-      // print("output: \(x > 0.0 ? 1.0 : 0.0)")
       return x > 0.0 ? 1.0 : 0.0
     } else {
       // Original
-      // print("output: \(max(0.0, x))")
       return max(0.0, x)
     }
   }
@@ -39,11 +36,8 @@ public class ActivationFunction {
   // SoftMax
   class func softMax(nets: [Double]) -> [Double] {
     let maxNet = nets.max() ?? 0
-//    print("softMax input: \(nets)")
     let expValues = nets.map { exp($0 - maxNet) }
     let sumExpValues = expValues.reduce(0, +)
-//    print("softMax output: \(expValues.map { $0 / sumExpValues })")
-    
     return expValues.map { $0 / sumExpValues }
   }
   
